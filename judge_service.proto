@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package judge_service;
+
+option go_package = "judge_service";
+
+
+// ===================================================================
+//  Service Definition
+// ===================================================================
+
+// JudgeService is responsible for managing problems and executing code submissions.
+service JudgeService {
+    rpc CreateProblem(CreateProblemRequest) returns (Problem);
+    rpc GetProblem(GetProblemRequest) returns (Problem);
+    rpc UpdateProblem(UpdateProblemRequest) returns (Problem);
+    rpc DeleteProblem(DeleteProblemRequest) returns (DeleteProblemResponse);
+    rpc JudgeSubmission(SubmissionRequest) returns (stream JudgeStreamResponse);
+}
+
+
+// ===================================================================
+//  Data Models (Messages)
+// ===================================================================
+
+// A Problem contains the description, limits, and everything needed to judge a solution.
+message Problem {
+    string id = 1;         // Unique identifier (e.g., UUID).
+    string title = 2;      // Problem title, e.g., "Sum of Two Numbers".
+    string description = 3; // Full problem description in Markdown/HTML.
+
+    // A map where the key is the language (e.g., "python", "cpp") and the value
+    // is the harness/scaffold code for that language.
+    map<string, string> language_harnesses = 4;
+    
+    ResourceLimits limits = 5; // Time and memory limits for this problem.
+    repeated TestCase test_cases = 6; // List of test cases.
+}
+
+// Defines the resource constraints for a submission.
+message ResourceLimits {
+    int32 time_limit_ms = 1;   // Time limit in milliseconds.
+    int32 memory_limit_mb = 2; // Memory limit in megabytes.
+}
+
+// Represents a single test case with input and expected output.
+message TestCase {
+    string input = 1;           // The input data to be piped into the program's stdin.
+    string expected_output = 2; // The exact expected output from the program's stdout.
+    bool is_hidden = 3;         // If true, the input/output is not shown to the user on failure.
+}
+
+// An enumeration for supported programming languages.
+enum Language {
+    LANGUAGE_UNSPECIFIED = 0;
+    PYTHON = 1;
+    CPP = 2;
+    JAVASCRIPT = 3;
+}
+
+
+// ===================================================================
+//  RPC Request/Response Messages
+// ===================================================================
+
+// --- Problem Management ---
+
+message CreateProblemRequest {
+    string title = 1;
+    string description = 2;
+    map<string, string> language_harnesses = 3;
+    ResourceLimits limits = 4;
+    repeated TestCase test_cases = 5;
+}
+
+message GetProblemRequest {
+    string id = 1;
+}
+
+message UpdateProblemRequest {
+    Problem problem = 1;
+}
+
+message DeleteProblemRequest {
+    string id = 1;
+}
+
+message DeleteProblemResponse {
+}
+
+// --- Code Execution ---
+
+// The request to judge a piece of code.
+message SubmissionRequest {
+    string problem_id = 1;
+    string source_code = 2;
+    Language language = 3;
+}
+
+message JudgeStreamResponse {
+    oneof event {
+            // Sent first to indicate compilation status.
+            CompilationUpdate compilation_update = 1; 
+
+            // Sent for each test case as it completes.
+            TestCaseUpdate test_case_update = 2;
+
+            // The final message in the stream, containing the overall verdict.
+            FinalVerdict final_verdict = 3;
+    }
+}
+
+// Represents the result of the compilation phase.
+message CompilationUpdate {
+    enum Status {
+        STATUS_UNSPECIFIED = 0;
+        PENDING = 1;
+        COMPILING = 2;
+        SUCCESS = 3;
+        FAILED = 4;
+    }
+    Status status = 1;
+    string output = 2;
+}
+
+// Represents the result of a single test case.
+message TestCaseUpdate {
+  int32 test_case_number = 1;
+  VerdictStatus status = 2;
+  int64 execution_time_ms = 3;
+  int64 memory_usage_kb = 4;
+}
+
+// The final verdict for the entire submission.
+message FinalVerdict {
+    VerdictStatus status = 1;
+    string message = 2;
+}
+
+// An enumeration for all possible test case/submission statuses.
+enum VerdictStatus {
+    VERDICT_UNSPECIFIED = 0;
+    ACCEPTED = 1;
+    WRONG_ANSWER = 2;
+    TIME_LIMIT_EXCEEDED = 3;
+    MEMORY_LIMIT_EXCEEDED = 4;
+    RUNTIME_ERROR = 5;
+    COMPILATION_ERROR = 6;
+    INTERNAL_ERROR = 7;
+}
