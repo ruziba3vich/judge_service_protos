@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package judge_service;
 
-option go_package = "judge_service";
+option go_package = "/judge_service";
 
 
 // ===================================================================
