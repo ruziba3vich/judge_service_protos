@@ -45,9 +45,11 @@ message ResourceLimits {
 
 // Represents a single test case with input and expected output.
 message TestCase {
-    string input = 1;           // The input data to be piped into the program's stdin.
-    string expected_output = 2; // The exact expected output from the program's stdout.
-    bool is_hidden = 3;         // If true, the input/output is not shown to the user on failure.
+    int32 id = 1;
+    string problem_id = 2;
+    string input = 3;           // The input data to be piped into the program's stdin.
+    string expected_output = 4; // The exact expected output from the program's stdout.
+    bool is_hidden = 5;         // If true, the input/output is not shown to the user on failure.
 }
 
 // An enumeration for supported programming languages.
