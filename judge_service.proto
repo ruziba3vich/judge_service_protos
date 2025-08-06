@@ -16,6 +16,7 @@ service JudgeService {
     rpc UpdateProblem(UpdateProblemRequest) returns (Problem);
     rpc DeleteProblem(DeleteProblemRequest) returns (DeleteProblemResponse);
     rpc JudgeSubmission(SubmissionRequest) returns (stream JudgeStreamResponse);
+    rpc GetProblems(GetProblemsRequest) returns (GetProblemsResponse);
 }
 
 
@@ -60,6 +61,18 @@ enum Language {
     JAVASCRIPT = 3;
 }
 
+enum Difficulty {
+    NOT_PROVIDED = 0;
+    HARD = 1;
+    MEDIUM = 2;
+    EASY = 3;
+}
+
+enum SolvedFilter {
+    UNSPECIFIED = 0;
+    ONLY_SOLVED = 1;
+    ONLY_UNSOLVED = 2;
+}
 
 // ===================================================================
 //  RPC Request/Response Messages
@@ -88,6 +101,18 @@ message DeleteProblemRequest {
 }
 
 message DeleteProblemResponse {
+}
+
+message GetProblemsRequest {
+    int32 page = 1;
+    int32 limit = 2;
+    Difficulty difficulty = 3;
+    SolvedFilter solved_filter = 4;
+}
+
+message GetProblemsResponse {
+    repeated Problem problems = 1;
+    int32 total_count = 2;
 }
 
 // --- Code Execution ---
