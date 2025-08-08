@@ -36,6 +36,7 @@ message Problem {
     
     ResourceLimits limits = 5; // Time and memory limits for this problem.
     repeated TestCase test_cases = 6; // List of test cases.
+    Difficulty difficulty = 7;
 }
 
 // Defines the resource constraints for a submission.
